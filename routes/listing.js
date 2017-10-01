@@ -13,7 +13,9 @@ var upload = multer()
 const s3 = new AWS.S3()
 
 router.post('/', upload.array('photos'), (req, res) => {
-  const { name, description, brand, condition, userId } = req.body
+  let parsedData = JSON.parse(req.body.data)
+  parsedData.description = JSON.parse(parsedData.description)
+  const { name, description, brand, condition, userId, photos } = parsedData
   User.findById(userId)
   .then(user => {
     if(user) {
@@ -29,7 +31,12 @@ router.post('/', upload.array('photos'), (req, res) => {
        const promiseMap = req.files.map((image, key) => {
          return new Promise((resolve, reject) => {
            sharp(image.buffer).resize(200, 200).toBuffer().then(data => {
-             const params = { Body: data, Bucket: `gearhubbucket1/${listing.id}`, Key: `photo${key}.png`}
+             const params = { 
+              Body: data,
+              Bucket: `gearhubbucket1/${listing.id}`, 
+              Key: `photo${key}.png`,
+              ACL: 'public-read'
+            }
              s3.putObject(params, (err, data) => {
                if(err){
                  res.send(err)
