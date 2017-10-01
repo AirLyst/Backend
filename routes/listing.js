@@ -28,10 +28,31 @@ router.post('/recents', (req, res) => {
   })
 })
 
+router.post('/id', (req, res) => {
+  const { id } = req.body
+  if(id){
+    Listing.find({ "_id": id})
+    .then(data => res.send(data[0]))
+  } else {
+    return res.status(500).json( { errors: { form: 'Invalid listing ID' } } )
+  }
+})
+
 router.post('/', upload.array('photos'), (req, res) => {
   let parsedData = JSON.parse(req.body.data)
-  parsedData.description = JSON.parse(parsedData.description)
-  const { name, description, brand, condition, userId, photos } = parsedData
+  parsedData.photoDescription = JSON.parse(parsedData.photoDescription)
+  const { 
+    name, 
+    description, 
+    photoDescription,
+    brand, 
+    condition, 
+    userId, 
+    photos, 
+    size, 
+    category, 
+    price } = parsedData
+  console.log(parsedData)
   User.findById(userId)
   .then(user => {
     if(user) {
@@ -40,13 +61,16 @@ router.post('/', upload.array('photos'), (req, res) => {
         description,
         brand,
         condition,
-        user // Put the user in the listing
+        size,
+        category,
+        price,
+        user, // Put the user in the listing
       }
       Listing.create(newListing)
       .then(listing => {
        const promiseMap = req.files.map((image, key) => {
          return new Promise((resolve, reject) => {
-           sharp(image.buffer).resize(200, 200).toBuffer().then(data => {
+           sharp(image.buffer).resize(400).toBuffer().then(data => {
              const params = { 
               Body: data,
               Bucket: `gearhubbucket1/${listing.id}`, 
