@@ -2,7 +2,6 @@ import express from 'express'
 import multer from 'multer'
 import sharp from 'sharp'
 import AWS from 'aws-sdk'
-import ObjectId from 'mongodb'
 import moment from 'moment'
 
 import Listing from '../models/listing'
