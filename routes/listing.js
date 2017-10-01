@@ -2,6 +2,8 @@ import express from 'express'
 import multer from 'multer'
 import sharp from 'sharp'
 import AWS from 'aws-sdk'
+import ObjectId from 'mongodb'
+import moment from 'moment'
 
 import Listing from '../models/listing'
 import User from '../models/user'
@@ -11,6 +13,21 @@ const router = express.Router()
 var upload = multer()
 
 const s3 = new AWS.S3()
+
+router.post('/recents', (req, res) => {
+  const { quantity } = req.body
+  const lastDay = moment().subtract(24, 'hours').toDate()
+  Listing.find({ "createdAt": { "$gte": lastDay} })
+  .then(data => {
+    if(!quantity || quantity.length > data.length)
+      res.send(data.slice(data.length - 12, data.length))
+    else
+      res.send(data.slice(data.length - quantity, data.length))
+  })
+  .catch(err => {
+    res.send({ error: `DB Error: ${err.message}`})
+  })
+})
 
 router.post('/', upload.array('photos'), (req, res) => {
   let parsedData = JSON.parse(req.body.data)
