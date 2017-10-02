@@ -53,6 +53,7 @@ router.post('/', upload.array('photos'), (req, res) => {
            })
          })
        })
+
       })
       .catch(err => { return res.status(500).json( { errors: { form: 'Server Error listing' } } ) }) // Error in creation
     } else
