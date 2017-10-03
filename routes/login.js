@@ -14,21 +14,22 @@ import User from '../models/user'
 // Setup express router
 const router = express.Router()
 
-router.post('/', async (req, res) => {
+const asyncMiddleware = fn => (req, res) => {
+  Promise.resolve(fn(req, res))
+    .catch(err => res.status(500).send(err.message))
+}
+
+router.post('/', asyncMiddleware(async (req, res) => {
   const { username, password } = req.body
-  try {
-    const user = await User.findOne({ username })
-    if (user) { // User found in DB
-      if (bcrypt.compareSync(password, user.password)) {
-        const token = user.generateJWT()
-        return res.json({ token }) // Success
-      }
+  const user = await User.findOne({ username })
+  if (user) { // User found in DB
+    if (bcrypt.compareSync(password, user.password)) {
+      const token = user.generateJWT()
+      return res.json({ token }) // Success
     }
-    return res.status(401).json({ errors: { form: 'Invalid Credentials' } })
-  } catch (err) {
-    return serverError(err, res)
   }
-})
+  return res.status(401).json({ errors: { form: 'Invalid Credentials' } })
+}))
 
 router.post('/facebook', async (req, res) => {
   const { accessToken, email } = req.body

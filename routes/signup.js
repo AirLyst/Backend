@@ -17,6 +17,11 @@ import validateInput from '../validations/signup'
 // Setup express router
 const router = express.Router()
 
+const asyncMiddleware = fn => (req, res, next) => {
+  Promise.resolve(fn(req, res, next))
+    .catch(err => res.status(500).send(err.message))
+}
+
 router.post('/', async (req, res) => {
   if (!validateInput(req.body).isValid) return res.send('Empty fields')
   const { firstName, lastName, email, username, password } = req.body
@@ -67,32 +72,28 @@ router.post('/facebook', async (req, res) => {
   }
 })
 
-router.post('/google', async (req, res) => {
+router.post('/google', asyncMiddleware(async (req, res) => {
   const { id_token } = req.body
-  try {
-    const response = await validateGoogle(id_token)
-    const { sub, email, given_name, family_name, picture } = response.data
+  const response = await validateGoogle(id_token)
+  const { sub, email, given_name, family_name, picture } = response.data
 
-    let user = await User.findOne({ google_id: sub })
-    if (user) {
-      const token = user.generateJWT()
-      return res.json({ token }) // Success
-    }
-
-    const newUser = {
-      firstName: given_name,
-      lastName: family_name,
-      email,
-      google_id: sub,
-      profile_picture: picture,
-      listings: []
-    }
-    user = await User.create(newUser)
+  let user = await User.findOne({ google_id: sub })
+  if (user) {
     const token = user.generateJWT()
-    return res.json({ token })
-  } catch (err) {
-    return serverError(err, res)
+    return res.json({ token }) // Success
   }
-})
+
+  const newUser = {
+    firstName: given_name,
+    lastName: family_name,
+    email,
+    google_id: sub,
+    profile_picture: picture,
+    listings: []
+  }
+  user = await User.create(newUser)
+  const token = user.generateJWT()
+  return res.json({ token })
+}))
 
 export default router

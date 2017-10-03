@@ -6,82 +6,69 @@ import moment from 'moment'
 
 import Listing from '../models/listing'
 import User from '../models/user'
+// import each from 'promise-each'
 
 const router = express.Router()
+
+import Promise from 'bluebird'
 
 var upload = multer()
 
 const s3 = new AWS.S3()
 
-router.post('/recents', (req, res) => {
-  const { quantity } = req.body
-  const lastDay = moment().subtract(24, 'hours').toDate()
-  Listing.find({ "createdAt": { "$gte": lastDay} })
-  .then(data => {
-    if(!quantity || quantity.length > data.length)
-      res.send(data.slice(data.length - 12, data.length))
-    else
-      res.send(data.slice(data.length - quantity, data.length))
-  })
-  .catch(err => {
-    res.send({ error: `DB Error: ${err.message}`})
-  })
+router.post('/', upload.array('photos'), async (req, res) => {
+  const { name, description, brand, condition, size, category, price, userId } = req.body
+  const photoDescription = JSON.parse(req.body.photoDescription)
+
+  let user = await User.findById(userId)
+  if(user) {
+    const newListing = {
+      name,
+      description,
+      photoDescription,
+      brand,
+      condition,
+      size,
+      price,
+      category,
+      user // Put the user in the listing
+    }
+
+    let listing = await Listing.create(newListing)
+
+    listing.photos = await Promise.all(req.files.map(async (image, key) => {
+       const buffer = await sharp(image.buffer).resize(200, 200).toBuffer()
+       await s3.putObject({ Body: buffer, Bucket: `gearhubbucket1/${user.id}/listings/${listing.id}`, Key: `photo${key}.png`}).promise()
+       return `https://s3.amazonaws.com/gearhubbucket1/${user.id}/listings/${listing.id}/photo${key}.png`
+    }));
+    listing = await listing.save()
+    user.listings.push(listing)
+    await user.save()
+    return res.json(listing)
+  } else return res.status(403).json( { errors: 'Must be a registered user to post '}) // Only get here if front-end issue
 })
 
-router.post('/', upload.array('photos'), (req, res) => {
-  let parsedData = JSON.parse(req.body.data)
-  parsedData.description = JSON.parse(parsedData.description)
-  const { name, description, brand, condition, userId, photos } = parsedData
-  User.findById(userId)
-  .then(user => {
-    if(user) {
-      const newListing = {
-        name,
-        description,
-        brand,
-        condition,
-        user // Put the user in the listing
-      }
-      Listing.create(newListing)
-      .then(listing => {
-       const promiseMap = req.files.map((image, key) => {
-         return new Promise((resolve, reject) => {
-           sharp(image.buffer).resize(200, 200).toBuffer().then(data => {
-             const params = { 
-              Body: data,
-              Bucket: `gearhubbucket1/${listing.id}`, 
-              Key: `photo${key}.png`,
-              ACL: 'public-read'
-            }
-             s3.putObject(params, (err, data) => {
-               if(err){
-                 res.send(err)
-                 reject(err)
-               }
-               else {
-                 listing.photos.push(`https://s3.amazonaws.com/gearhubbucket1/${listing.id}/photo${key}.png`)
-                 resolve('worked')
-               }
-             })
-           })
-         })
-       })
+router.post('/recents', async (req, res) => {
+  const { quantity } = req.body
+  const lastDay = moment().subtract(24, 'hours').toDate()
+  const listings = await Listing.find({ "createdAt": { "$gte": lastDay} })
 
-       Promise.all(promiseMap)
-       .then(arrOfResolved => {
-         listing.save((err, listing) => {
-           user.listings.push(listing)
-           user.save((err, user) => {
-             return res.json(listing)
-           })
-         })
-       })
-      })
-      .catch(err => { return res.status(500).json( { errors: { form: 'Server Error listing' } } ) }) // Error in creation
-    } else
-      return res.status(403).json( { errors: 'Must be a registered user to post '}) // Only get here if front-end issue
-  })
-  .catch(err => { return res.status(500).json( { errors: { form: 'Server Error user' } } ) }) // Error in lookup
+  if (listings) {
+    if (!quantity || quantity.length > listings.length)
+      res.send(listings.slice(listings.length - 12, listings.length))
+    else
+      res.send(listings.slice(listings.length - quantity))
+  }
+})
+
+router.post('/id', async (req, res) => {
+  const { id } = req.body
+  if(id){
+    const listing = await Listing.find({ "_id": id})
+    res.send(listing[0])
+  } else {
+    return res.status(500).json( { errors: { form: 'Invalid listing ID' } } )
+  }
 })
 
 export default router
