@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 const listingSchema = new mongoose.Schema({ // What each user will look like
   name: { type: String, required: true },
   description: { type: String, required: true },
-  description: { type: [String], default: [] },
+  photoDescription: { type: [String], default: [] },
   brand: { type: String, required: true },
   condition: { type: String, required: true },
   size: { type: String, required: true },
