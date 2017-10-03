@@ -38,7 +38,12 @@ router.post('/', upload.array('photos'), async (req, res) => {
 
     listing.photos = await Promise.all(req.files.map(async (image, key) => {
        const buffer = await sharp(image.buffer).resize(200, 200).toBuffer()
-       await s3.putObject({ Body: buffer, Bucket: `gearhubbucket1/${user.id}/listings/${listing.id}`, Key: `photo${key}.png`}).promise()
+       await s3.putObject({
+         Body: buffer,
+         Bucket: `gearhubbucket1/${user.id}/listings/${listing.id}`,
+         Key: `photo${key}.png`,
+         ACL: 'public-read'
+       }).promise()
        return `https://s3.amazonaws.com/gearhubbucket1/${user.id}/listings/${listing.id}/photo${key}.png`
     }));
     listing = await listing.save()
