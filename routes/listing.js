@@ -16,20 +16,20 @@ const s3 = new AWS.S3()
 
 router.post('/', upload.array('photos'), async (req, res) => {
   const { name, description, brand, condition, size, category, price, userId } = req.body
-  const photoDescription = JSON.parse(req.body.photoDescription)
+  const photoDescriptions = JSON.parse(req.body.photoDescription)
 
   const user = await User.findById(userId)
   if (user) {
     const newListing = {
       name,
       description,
-      photoDescription,
+      photoDescriptions,
       brand,
       condition,
       size,
       price,
       category,
-      user // Put the user in the listing
+      user
     }
 
     let listing = await Listing.create(newListing)
@@ -42,7 +42,10 @@ router.post('/', upload.array('photos'), async (req, res) => {
         Key: `photo${key}.png`,
         ACL: 'public-read'
       }).promise()
-      return `https://s3.amazonaws.com/gearhubbucket1/${user.id}/listings/${listing.id}/photo${key}.png`
+      return {
+        image: `https://s3.amazonaws.com/gearhubbucket1/${user.id}/listings/${listing.id}/photo${key}.png`,
+        description: photoDescriptions[key]
+      }
     }))
     listing = await listing.save()
     user.listings.push(listing)
