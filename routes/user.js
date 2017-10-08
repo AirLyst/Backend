@@ -10,8 +10,10 @@ import User from '../models/user'
 const router = express.Router()
 const s3 = new AWS.S3()
 
-router.post('/profile_picture', async (req, res) => {
-  const { userId, image } = req.body
+router.put('/:id/profile_picture', async (req, res) => {
+  const { image } = req.body
+  const userId = req.params.id
+  console.log(userId)
   const user = await User.findById(userId)
   if (user) {
      const buffer = new Buffer(image.replace(/^data:image\/\w+;base64,/, ""),'base64')
