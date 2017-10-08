@@ -16,7 +16,7 @@ const s3 = new AWS.S3()
 
 router.post('/', upload.array('photos'), async (req, res) => {
   const { name, description, brand, condition, size, category, price, userId } = req.body
-  const photoDescriptions = JSON.parse(req.body.photoDescription)
+  const photoDescriptions = JSON.parse(req.body.photoDescriptions)
 
   const user = await User.findById(userId)
   if (user) {

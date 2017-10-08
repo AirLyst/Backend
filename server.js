@@ -12,6 +12,7 @@ import secureRoutes from './validations/authenticate'
 import signup from './routes/signup'
 import login from './routes/login'
 import listing from './routes/listing'
+import user from './routes/user'
 
 // Configurations
 dotenv.config({ path: path.join(__dirname, '/.env') })
@@ -29,9 +30,9 @@ mongoose.connection.on('error', (err) => {
 })
 
 // Allow urlencoded or json formatted data to be parsed
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
-app.use(bodyParser.text())
+app.use(bodyParser.urlencoded({ extended: false, limit: '20mb' }))
+app.use(bodyParser.json({ limit: '20mb' }))
+app.use(bodyParser.text({ limit: '20mb' }))
 
 // CORS middleware
 app.use((req, res, next) => {
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
 app.use('/api/signup', signup)
 app.use('/api/login', login)
 app.use('/api/listing', listing)
+app.use('/api/user', user)
 
 // Root route
 app.get('/', (req, res) => { res.send('Home Route /') })
