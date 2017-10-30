@@ -5,7 +5,13 @@ import mongoose from 'mongoose'
 import bluebird from 'bluebird'
 import dotenv from 'dotenv'
 import path from 'path'
+import http from 'http'
+import cors from 'cors'
+// Sockets
+import SocketIO from 'socket.io'
+import socketEvents from './socket/socketEvents'
 
+// Authentications
 import secureRoutes from './validations/authenticate'
 
 // Routes
@@ -21,6 +27,8 @@ const PORT = process.env.PORT || '4000'
 
 // App setup
 const app = express()
+const server = http.Server(app)
+const io = new SocketIO(server)
 
 // Connect to DB
 mongoose.Promise = bluebird
@@ -35,13 +43,11 @@ app.use(bodyParser.urlencoded({ extended: false, limit: '20mb' }))
 app.use(bodyParser.json({ limit: '20mb' }))
 app.use(bodyParser.text({ limit: '20mb' }))
 
+// Set up sockets
+socketEvents(io)
+
 // CORS middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-  next()
-})
+app.use(cors())
 
 // Use routes
 app.use('/api/signup', signup)
@@ -60,3 +66,7 @@ app.get('/secure', secureRoutes, (req, res) => { res.json({ data: 'logged in' })
 app.listen(PORT, () => {
   console.log(`Server Started at port ${PORT}`)
 })
+
+io.listen(5000, () => {
+  console.log(`Server Started`)
+} )
