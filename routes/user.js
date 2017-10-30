@@ -11,10 +11,8 @@ const router = express.Router()
 const s3 = new AWS.S3()
 
 router.put('/:id/profile_picture', async (req, res) => {
-  const { image } = req.body
-  const userId = req.params.id
-  console.log(userId)
-  const user = await User.findById(userId)
+  const { image } = req.body 
+  const user = await User.findById(req.params.id)
   if (user) {
      const buffer = new Buffer(image.replace(/^data:image\/\w+;base64,/, ""),'base64')
      const compressedImage = await sharp(buffer).resize(500).toBuffer()
@@ -29,7 +27,7 @@ router.put('/:id/profile_picture', async (req, res) => {
     if (uploaded) {
       user.profile_picture = `https://s3.amazonaws.com/gearhubbucket1/${user.id}/profile_picture.png`
       await user.save()
-      res.send({ data: 'Profile picture saved'})
+      return res.send({ data: 'Profile picture saved'})
     }
   }
 })

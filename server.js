@@ -13,6 +13,7 @@ import signup from './routes/signup'
 import login from './routes/login'
 import listing from './routes/listing'
 import user from './routes/user'
+import chat from './routes/chat'
 
 // Configurations
 dotenv.config({ path: path.join(__dirname, '/.env') })
@@ -47,6 +48,7 @@ app.use('/api/signup', signup)
 app.use('/api/login', login)
 app.use('/api/listing', listing)
 app.use('/api/user', user)
+app.use('/api/chat', chat)
 
 // Root route
 app.get('/', (req, res) => { res.send('Home Route /') })
