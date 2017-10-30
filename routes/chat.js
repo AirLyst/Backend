@@ -11,19 +11,35 @@ const routes = express.Router()
  * return the conversations with other
  * participants and a one line snippet
  */
-routes.get('/', async (req, res) => {
-  const conversations = await Conversation.find({ participants: req.user._id })
+routes.get('/:userId', async (req, res) => {
+  const { userId } = req.params
+  const conversations = await Conversation.find({ participants: userId })
 
   if (conversations) {
-    let fullConversations = []
+    let allConversations = [], otherUser = ''
     conversations.forEach(async conversation => {
+      // https://stackoverflow.com/questions/2167602/optimum-way-to-compare-strings-in-javascript
+      if (userId.localeCompare(conversation.participants[0]) === 0)
+        otherUser = conversation.participants[1]
+      else
+        otherUser = conversation.participants[0]
+      // Fetch last message sent in the conversation, for preview
       const message = await Message.find({ 'conversationId': conversation._id })
         .sort('-createdAt')
         .limit(1)
-      if(message) {
-        fullConversations.push(message)
-        if(fullConversations.length === conversations.length)
-          return res.status(200).json({ conversations: fullConversations })
+      if (message) {
+        const otherParticipant = await User.findOne({ _id: otherUser })
+        if (otherParticipant) {
+          allConversations.push({ 
+            user: `${otherParticipant.firstName} ${otherParticipant.lastName}`,
+            profile_picture: otherParticipant.profile_picture,
+            previewMessage: message[0],
+          })
+          if(allConversations.length === conversations.length)
+            return res.status(200).send({ conversations: allConversations })
+        }
+      } else {
+        console.log('get Messages: failed to get conversations')
       }
     })
   } else {
@@ -51,7 +67,7 @@ routes.get('/:conversationId', async (req, res) => {
  * message - the text message itself
  */
 routes.post('/', async (req, res) => {
-  const { user, recipient, message } = req.body
+  const { user, recipient, message, displayName } = req.body
   // const recipientId = req.body.recipient
   const foundRecipient = await User.findOne({ _id: recipient })
 
@@ -63,7 +79,8 @@ routes.post('/', async (req, res) => {
       const newMessage = await Message.create({
         conversationId: findConversation._id,
         body: message,
-        author: user
+        author: user,
+        displayName
       })
 
       if(newMessage) {
@@ -99,11 +116,12 @@ routes.post('/', async (req, res) => {
 })
 
 routes.put('/', async (req, res) => {
-  const { conversationId, message, user } = req.body
+  const { conversationId, message, user, displayName } = req.body
   const reply = await Message.create({
     conversationId,
+    displayName,
     body: message,
-    author: user
+    author: user,
   })
 
   if(reply) {

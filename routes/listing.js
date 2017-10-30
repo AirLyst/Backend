@@ -55,8 +55,8 @@ router.post('/', upload.array('photos'), async (req, res) => {
   return res.status(403).json({ errors: 'Must be a registered user to post' }) // Only get here if front-end issue
 })
 
-router.post('/recents', async (req, res) => {
-  const { quantity } = req.body
+router.get('/recents/:quantity', async (req, res) => {
+  const { quantity } = req.params
   const lastDay = moment().subtract(24, 'hours').toDate()
   const listings = await Listing.find({ createdAt: { $gte: lastDay } })
 
@@ -67,8 +67,8 @@ router.post('/recents', async (req, res) => {
   }
 })
 
-router.post('/id', async (req, res) => {
-  const { _id } = req.body
+router.get('/:_id', async (req, res) => {
+  const { _id } = req.params
   if (_id) {
     const listing = await Listing.findOne({ _id })
     return res.send(listing)
