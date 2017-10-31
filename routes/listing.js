@@ -57,10 +57,11 @@ router.post('/', upload.array('photos'), async (req, res) => {
 
 router.get('/recents/:quantity', async (req, res) => {
   const { quantity } = req.params
-  const lastDay = moment().subtract(24, 'hours').toDate()
+  const lastDay = moment().subtract(150, 'hours').toDate()
   const listings = await Listing.find({ createdAt: { $gte: lastDay } })
 
   if (listings) {
+    console.log(listings[0])
     if (!quantity || quantity.length > listings.length) {
       res.send(listings.slice(listings.length - 12, listings.length))
     } else res.send(listings.slice(listings.length - quantity))
@@ -71,6 +72,8 @@ router.get('/:_id', async (req, res) => {
   const { _id } = req.params
   if (_id) {
     const listing = await Listing.findOne({ _id })
+    .populate({ path: 'user', select: 'firstName lastName profile_picture _id'})
+    
     return res.send(listing)
   }
   return res.status(500).json({ errors: { form: 'Invalid listing ID' } })

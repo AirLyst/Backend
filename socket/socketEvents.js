@@ -1,17 +1,29 @@
 export default function socketEvent(io) {
   io.on('connection', socket => {
-    console.log(`User connected`)
+    console.log(`User connected ${socket.conn.id}`)
 
-    socket.on('enter-conversation', conversation => {
+    socket.on('join-conversation', conversation => {
+      console.log(`Joining conversation: ${conversation}`)
       socket.join(conversation)
     })
   
     socket.on('leave-conversation', conversation => {
+      console.log(`Leaving conversation: ${conversation}`)
       socket.leave(conversation)
     })
   
-    socket.on('new-message', conversation => {
-      io.sockets.in(conversation).emit('refresh-messages', conversation)
+    /**
+     * data contains the conversationId and the message body
+     * @param converationid, sender message
+     */
+    socket.on('new-message', data => {
+      const { message, conversationId, sender } = data
+      const messageBody = {
+        sender,
+        body: message
+      }
+      console.log(messageBody)
+      io.sockets.in(conversationId).emit('refresh-messages', messageBody)
     })
   
     socket.on('disconnect', () => {
