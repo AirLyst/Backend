@@ -22,7 +22,6 @@ export default function socketEvent(io) {
         sender,
         body: message
       }
-      console.log(messageBody)
       io.sockets.in(conversationId).emit('refresh-messages', messageBody)
     })
   

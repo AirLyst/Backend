@@ -6,6 +6,7 @@ import bluebird from 'bluebird'
 import dotenv from 'dotenv'
 import path from 'path'
 import http from 'http'
+import cors from 'cors'
 
 // Sockets
 import SocketIO from 'socket.io'
@@ -47,12 +48,13 @@ app.use(bodyParser.text({ limit: '20mb' }))
 socketEvents(io)
 
 // CORS middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-  next()
-})
+app.use(cors('GET, PUT, POST, DELETE, PATCH, OPTIONS'))
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*')
+//   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS')
+//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+//   next()
+// })
 // Use routes
 app.use('/api/signup', signup)
 app.use('/api/login', login)

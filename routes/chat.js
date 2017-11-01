@@ -82,6 +82,7 @@ routes.get('/:_id/:conversationId', async (req, res) => {
       const messages = await Message.find({ conversationId })
       .select('author body')
       
+      
       if (messages) { 
         res.status(200).json({ user: userInfo, messages })
       } else {
@@ -113,7 +114,8 @@ routes.post('/', async (req, res) => {
       const newMessage = await Message.create({
         conversationId: findConversation._id,
         body: message,
-        author: user
+        author: user,
+        read: false
       })
 
       if(newMessage) {
@@ -131,7 +133,8 @@ routes.post('/', async (req, res) => {
         const newMessage = await Message.create({
           conversationId: conversation._id,
           body: message,
-          author: user
+          author: user,
+          read: false
         })
 
         if(newMessage) {
@@ -156,6 +159,7 @@ routes.put('/', async (req, res) => {
     conversationId,
     body: message,
     author: author,
+    read: false
   })
 
   if(reply) {

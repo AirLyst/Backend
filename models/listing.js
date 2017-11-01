@@ -9,6 +9,7 @@ const listingSchema = new mongoose.Schema({ // What each user will look like
   price: { type: String, required: true },
   category: { type: String, required: true },
   photos: { type: [{ image: String, description: String }], default: [] },
+  liked: { type: Number, required: true, default: 0 },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

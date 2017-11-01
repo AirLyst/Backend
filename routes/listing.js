@@ -7,6 +7,7 @@ import Promise from 'bluebird'
 
 import Listing from '../models/listing'
 import User from '../models/user'
+import Like from '../models/like'
 
 const router = express.Router()
 
@@ -29,7 +30,7 @@ router.post('/', upload.array('photos'), async (req, res) => {
       size,
       price,
       category,
-      user
+      user,
     }
 
     let listing = await Listing.create(newListing)
@@ -55,13 +56,50 @@ router.post('/', upload.array('photos'), async (req, res) => {
   return res.status(403).json({ errors: 'Must be a registered user to post' }) // Only get here if front-end issue
 })
 
+/**
+ * Creates a like given the userId and the listingId
+ */
+router.post('/like', async (req, res) => {
+  const { listingId, userId } = req.body
+
+  const addLike = await Like.create({ listingId, userId })
+  if (addLike) 
+    return res.status(200).send({ data: 'Liked successfully' })
+  else
+    return res.status(400).send({ message: 'Failed to like item' })
+})
+
+/**
+ * Takes user ID, returns array of likes
+ */
+router.get('/like/:userId', async (req, res) => {
+  const { userId } = req.params
+
+  const getLikes = await Like.find({ userId })
+  .select('_id listingId')
+
+  getLikes ? res.status(200).send(getLikes) : res.status(400).send('Failed')
+})
+
+/**
+ * Takes listing ID
+ */
+router.delete('/like/:_id', async (req, res) => {
+  const { _id } = req.params
+  const removeLike = await Like.findByIdAndRemove(_id)
+
+  if(removeLike)
+    return res.status(200).send({ data: 'Removed like' })
+  else
+    return res.status(404).send({ message: 'Failed to remove like'})
+})
+
 router.get('/recents/:quantity', async (req, res) => {
   const { quantity } = req.params
   const lastDay = moment().subtract(150, 'hours').toDate()
   const listings = await Listing.find({ createdAt: { $gte: lastDay } })
 
   if (listings) {
-    console.log(listings[0])
     if (!quantity || quantity.length > listings.length) {
       res.send(listings.slice(listings.length - 12, listings.length))
     } else res.send(listings.slice(listings.length - quantity))
