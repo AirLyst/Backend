@@ -73,10 +73,37 @@ router.get('/:_id', async (req, res) => {
   if (_id) {
     const listing = await Listing.findOne({ _id })
     .populate({ path: 'user', select: 'firstName lastName profile_picture _id'})
+
+    if(listing)
+      return res.send(listing)
+    else
+      return res.status(400).json({ message: `${_id} is not a valid listing ID.`})
     
-    return res.send(listing)
   }
-  return res.status(500).json({ errors: { form: 'Invalid listing ID' } })
+  return res.status(400).json({ message: 'No ID Provided' })
+})
+
+router.get('/user/:userId/:pivotId/:direction', async (req, res) => {
+  const { userId, pivotId, direction } = req.params
+  let query
+  if (direction === 'null')
+    query = { user: userId}
+  else {
+    if(direction === 'next')
+      query = { _id: {'$lt': pivotId}, user: userId }
+    else
+      query = { _id: {'$gt': pivotId}, user: userId }
+  }
+
+  const listings = await Listing.find(query)
+  .sort({ _id: -1 }) // newest to oldest, 1 is opposite
+  .limit(10)
+
+  if(listings) {
+    return res.send(listings)    
+  }
+  else
+    return res.status(400).json({ message: 'Failed to fetch listings'})
 })
 
 export default router
