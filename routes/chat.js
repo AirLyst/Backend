@@ -3,6 +3,7 @@ import express from 'express'
 import User from '../models/user'
 import Conversation from '../models/conversation'
 import Message from '../models/message'
+import Listing from '../models/listing'
 
 const routes = express.Router()
 
@@ -39,16 +40,25 @@ routes.get('/:userId', async (req, res) => {
               body: ''
             }
           }
-          allConversations.push({ 
-            firstName, 
-            lastName, 
-            profile_picture, 
-            previewMessage,
-            conversationId: conversation._id,
-          })
-          if(allConversations.length === conversations.length){
-            return res.status(200).send({ conversations: allConversations })
-            
+          const listingInfo = await Listing.findOne(conversation.listingId)
+          .select('name photos')
+          if (listingInfo) {
+            allConversations.push({ 
+              firstName, 
+              lastName, 
+              profile_picture, 
+              previewMessage,
+              conversationId: conversation._id,
+              listing: {
+                name: listingInfo.name,
+                image: listingInfo.photos[0].image
+              }
+            })
+            if(allConversations.length === conversations.length){
+              return res.status(200).send({ conversations: allConversations })
+            }
+          } else {
+            res.status(404).send({ err: 'GET Failed to get listing info'})
           }
         }
       } else {
@@ -82,7 +92,6 @@ routes.get('/:_id/:conversationId', async (req, res) => {
       const messages = await Message.find({ conversationId })
       .select('author body')
       
-      
       if (messages) { 
         res.status(200).json({ user: userInfo, messages })
       } else {
@@ -103,19 +112,19 @@ routes.get('/:_id/:conversationId', async (req, res) => {
  * message - the text message itself
  */
 routes.post('/', async (req, res) => {
-  const { user, recipient, message } = req.body
-  const foundRecipient = await User.findOne({ _id: recipient })
+  const { user, recipient, message, listingId } = req.body
+  const findRecipient = await User.findOne({ _id: recipient })
 
-  if(foundRecipient) {
+  if(findRecipient) {
     const findConversation = await Conversation.findOne({
-      participants: [user, foundRecipient._id]
+      participants: [user, findRecipient._id],
+      listingId
     })
     if(findConversation) {
       const newMessage = await Message.create({
         conversationId: findConversation._id,
         body: message,
-        author: user,
-        read: false
+        author: user
       })
 
       if(newMessage) {
@@ -126,7 +135,8 @@ routes.post('/', async (req, res) => {
       res.status(200).json({ status: 'Conversation exists!', conversationId: findConversation._id })
     } else {
       const conversation = await Conversation.create({
-        participants: [user, foundRecipient._id]
+        participants: [user, findRecipient._id],
+        listingId
       })
   
       if (conversation) {
@@ -153,20 +163,14 @@ routes.post('/', async (req, res) => {
  * Creates a new message in the database
  */
 routes.put('/', async (req, res) => {
-  const { conversationId, message, author } = req.body
+  const { conversationId, body, author } = req.body
 
-  const reply = await Message.create({
-    conversationId,
-    body: message,
-    author: author,
-    read: false
-  })
+  const reply = await Message.create({ conversationId, body, author })
 
-  if(reply) {
+  if(reply) 
     return res.status(200).json({ message: 'Reply sent '})
-  } else {
+  else
     return res.status(404).json({ err: 'Failed to send reply'})
-  }
 })
 
 export default routes

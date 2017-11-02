@@ -58,13 +58,19 @@ router.post('/', upload.array('photos'), async (req, res) => {
 
 /**
  * Creates a like given the userId and the listingId
+ * https://stackoverflow.com/questions/25421164/insert-if-not-exists-else-remove-mongodb
  */
 router.post('/like', async (req, res) => {
   const { listingId, userId } = req.body
 
   const addLike = await Like.create({ listingId, userId })
-  if (addLike) 
-    return res.status(200).send({ data: 'Liked successfully' })
+  if (addLike){
+    const incLike = await Listing.update( { _id: listingId, '$inc': { liked: 1 }})
+    if(incLike)
+      return res.status(200).send({ data: 'Liked successfully' })
+    else
+      return res.status(400).send({ message: 'Failed to increment like on listing'})
+  }
   else
     return res.status(400).send({ message: 'Failed to like item' })
 })
@@ -95,14 +101,13 @@ router.delete('/like/:_id', async (req, res) => {
 })
 
 router.get('/recents/:quantity', async (req, res) => {
-  const { quantity } = req.params
-  const lastDay = moment().subtract(150, 'hours').toDate()
-  const listings = await Listing.find({ createdAt: { $gte: lastDay } })
+  const quantity = parseInt(req.params.quantity)
+  const listings = await Listing.find()
+  .sort({ _id: -1 })
+  .limit(quantity)
 
-  if (listings) {
-    if (!quantity || quantity.length > listings.length) {
-      res.send(listings.slice(listings.length - 12, listings.length))
-    } else res.send(listings.slice(listings.length - quantity))
+  if (listings){
+    res.send(listings)
   }
 })
 

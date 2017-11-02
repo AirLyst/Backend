@@ -55,6 +55,7 @@ app.use(cors('GET, PUT, POST, DELETE, PATCH, OPTIONS'))
 //   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
 //   next()
 // })
+
 // Use routes
 app.use('/api/signup', signup)
 app.use('/api/login', login)
