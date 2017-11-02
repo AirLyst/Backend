@@ -37,7 +37,7 @@ router.post('/facebook', async (req, res) => {
     const response = await validateFacebook(accessToken)
     const { name, id } = response.data
 
-    let user = User.findOne({ facebook_id: id }).catch(serverError)
+    let user = await User.findOne({ facebook_id: id })
     if (user) { // User found in DB
       const token = user.generateJWT()
       return res.json({ token }) // Success
@@ -50,11 +50,11 @@ router.post('/facebook', async (req, res) => {
       facebook_id: id,
       listings: []
     }
-    user = await User.create(newUser).catch(serverError)
-    const token = user.generateJWT()
+    let user2 = await User.create(newUser)
+    const token = user2.generateJWT()
     return res.json({ token })
   } catch (err) {
-    return serverError(err)
+    return serverError(err, res)
   }
 })
 

@@ -20,7 +20,8 @@ userSchema.methods.generateJWT = function generateJWT() {
   return jwt.sign({
     id: this.id,
     firstName: this.firstName,
-    lastName: this.lastName
+    lastName: this.lastName,
+    profile_picture: this.profile_picture
   }, process.env.JWT_SECRET, { expiresIn: '10d' })
 }
 
