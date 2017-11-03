@@ -126,21 +126,17 @@ router.get('/:_id', async (req, res) => {
   return res.status(400).json({ message: 'No ID Provided' })
 })
 
-router.get('/user/:userId/:pivotId/:direction', async (req, res) => {
-  const { userId, pivotId, direction } = req.params
+router.get('/user/:userId/:pivot/', async (req, res) => {
+  const { userId, pivot } = req.params
   let query
-  if (direction === 'null')
-    query = { user: userId}
-  else {
-    if(direction === 'next')
-      query = { _id: {'$lt': pivotId}, user: userId }
-    else
-      query = { _id: {'$gt': pivotId}, user: userId }
-  }
+  if (pivot === 'null') 
+    query = { user: userId }
+  else
+    query = { _id: {'$lt': pivot}, user: userId }
 
   const listings = await Listing.find(query)
   .sort({ _id: -1 }) // newest to oldest, 1 is opposite
-  .limit(10)
+  .limit(12)
 
   if(listings) {
     return res.send(listings)    

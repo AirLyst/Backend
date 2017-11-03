@@ -41,7 +41,7 @@ routes.get('/:userId', async (req, res) => {
             }
           }
           const listingInfo = await Listing.findOne(conversation.listingId)
-          .select('name photos')
+          .select('_id name photos')
           if (listingInfo) {
             allConversations.push({ 
               firstName, 
@@ -50,8 +50,9 @@ routes.get('/:userId', async (req, res) => {
               previewMessage,
               conversationId: conversation._id,
               listing: {
+                _id: listingInfo._id,
                 name: listingInfo.name,
-                image: listingInfo.photos[0].image
+                image: listingInfo.photos[0].image,
               }
             })
             if(allConversations.length === conversations.length){
@@ -80,7 +81,9 @@ routes.get('/:_id/:conversationId', async (req, res) => {
   const { _id, conversationId } = req.params
   // get conversation information so we can get other user's id
   const conversation = await Conversation.findOne({ _id: conversationId})
+  .populate({path: 'listingId', select: 'name photos price'})
   if(conversation) {
+    console.log(conversation)
     let getUserInfo
     if (_id.localeCompare(conversation.participants[0]) === 0)
       getUserInfo = conversation.participants[1]
@@ -93,7 +96,7 @@ routes.get('/:_id/:conversationId', async (req, res) => {
       .select('author body')
       
       if (messages) { 
-        res.status(200).json({ user: userInfo, messages })
+        res.status(200).json({ user: userInfo, listing: conversation.listingId, messages })
       } else {
         res.status(400).send({ err: 'Failed to fetch user information' })
       }
