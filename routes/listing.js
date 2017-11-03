@@ -64,7 +64,7 @@ router.post('/like', async (req, res) => {
   const { listingId, userId } = req.body
 
   const addLike = await Like.create({ listingId, userId })
-  if (addLike){
+  if (addLike) {
     const incLike = await Listing.update( { _id: listingId, '$inc': { liked: 1 }})
     if(incLike)
       return res.status(200).send({ data: 'Liked successfully' })
@@ -101,27 +101,27 @@ router.delete('/like/:_id', async (req, res) => {
 })
 
 router.get('/recents/:quantity', async (req, res) => {
-  const quantity = parseInt(req.params.quantity)
+  const quantity = Number(req.params.quantity)
   const listings = await Listing.find()
-  .sort({ _id: -1 })
-  .limit(quantity)
+    .sort({ _id: -1 })
+    .limit(quantity)
 
-  if (listings){
-    res.send(listings)
+  if (listings) {
+    return res.send(listings)
   }
+  return res.json({ err: 'No listings found' })
 })
 
 router.get('/:_id', async (req, res) => {
   const { _id } = req.params
   if (_id) {
     const listing = await Listing.findOne({ _id })
-    .populate({ path: 'user', select: 'firstName lastName profile_picture _id'})
+      .populate({ path: 'user', select: 'firstName lastName profile_picture _id' })
 
-    if(listing)
+    if (listing) {
       return res.send(listing)
-    else
-      return res.status(400).json({ message: `${_id} is not a valid listing ID.`})
-    
+    }
+    return res.status(400).json({ message: `${_id} is not a valid listing ID.` })
   }
   return res.status(400).json({ message: 'No ID Provided' })
 })
@@ -139,14 +139,13 @@ router.get('/user/:userId/:pivotId/:direction', async (req, res) => {
   }
 
   const listings = await Listing.find(query)
-  .sort({ _id: -1 }) // newest to oldest, 1 is opposite
-  .limit(10)
+    .sort({ _id: -1 }) // newest to oldest, 1 is opposite
+    .limit(10)
 
-  if(listings) {
-    return res.send(listings)    
+  if (listings) {
+    return res.send(listings)
   }
-  else
-    return res.status(400).json({ message: 'Failed to fetch listings'})
+  return res.status(400).json({ message: 'Failed to fetch listings' })
 })
 
 export default router

@@ -26,3 +26,4 @@ userSchema.methods.generateJWT = function generateJWT() {
 }
 
 export default mongoose.model('User', userSchema)
+

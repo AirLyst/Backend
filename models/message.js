@@ -6,7 +6,7 @@ const messageSchema = new mongoose.Schema({
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 },
 {
-  timestamps: true    
+  timestamps: true
 })
 
 export default mongoose.model('Message', messageSchema)
