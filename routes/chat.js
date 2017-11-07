@@ -15,6 +15,7 @@ const routes = express.Router()
 routes.get('/:userId', async (req, res) => {
   const { userId } = req.params
   const conversations = await Conversation.find({ participants: userId })
+  .sort({ _id: -1 })
 
   if (conversations) {
     let allConversations = [], getUserInfo = ''
@@ -80,6 +81,7 @@ routes.get('/:_id/:conversationId', async (req, res) => {
   const { _id, conversationId } = req.params
   // get conversation information so we can get other user's id
   const conversation = await Conversation.findOne({ _id: conversationId})
+    .populate({path: 'listingId', select: 'name photos price'})
   if(conversation) {
     let getUserInfo
     if (_id.localeCompare(conversation.participants[0]) === 0)
@@ -93,7 +95,7 @@ routes.get('/:_id/:conversationId', async (req, res) => {
       .select('author body')
       
       if (messages) { 
-        res.status(200).json({ user: userInfo, messages })
+        res.status(200).json({ user: userInfo, listing: conversation.listingId, messages })
       } else {
         res.status(400).send({ err: 'Failed to fetch user information' })
       }
