@@ -17,10 +17,10 @@ export default function socketEvent(io) {
      * @param converationid, sender message
      */
     socket.on('new-message', data => {
-      const { message, conversationId, sender } = data
+      const { body, conversationId, sender } = data
       const messageBody = {
         sender,
-        body: message
+        body
       }
       io.sockets.in(conversationId).emit('refresh-messages', messageBody)
     })
