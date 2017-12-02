@@ -42,7 +42,7 @@ routes.get('/:userId', async (req, res) => {
             }
           }
           const listingInfo = await Listing.findOne(conversation.listingId)
-          .select('name photos')
+            .select('_id name photos')
           if (listingInfo) {
             allConversations.push({ 
               firstName, 
@@ -52,6 +52,7 @@ routes.get('/:userId', async (req, res) => {
               conversationId: conversation._id,
               listing: {
                 name: listingInfo.name,
+                _id: listingInfo._id,
                 image: listingInfo.photos[0].image
               }
             })
