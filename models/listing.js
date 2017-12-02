@@ -16,4 +16,6 @@ const listingSchema = new mongoose.Schema({ // What each user will look like
   }
 }, { timestamps: true })
 
+listingSchema.index({ name: 'text', description: 'text', brand: 'text' })
+
 export default mongoose.model('Listing', listingSchema)

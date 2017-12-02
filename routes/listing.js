@@ -145,4 +145,17 @@ router.get('/user/:userId/:pivot/', async (req, res) => {
     return res.status(400).json({ message: 'Failed to fetch listings'})
 })
 
+router.get('/search/:query/:pivot', async (req, res) => {
+  const { query, pivot } = req.params
+  let mongoQuery
+  if (pivot === 'null') 
+    mongoQuery = { '$text': { '$search': query } }
+  else
+    mongoQuery = { _id: {'$lt': pivot }, '$text': { '$search': query } }
+  const foundListings = await Listing.find(mongoQuery)
+    .sort({ _id: -1 })
+    .limit(12)
+  res.send(foundListings)
+})
+
 export default router
