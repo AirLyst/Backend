@@ -66,6 +66,10 @@ app.use('/api/chat', chat)
 // Root route
 app.get('/', (req, res) => { res.send('Home Route /') })
 
+// Google Verification
+app.get('/google6e065bf0b183ed5f.html', (req, res) => {
+  res.sendFile(path.join(__dirname, './', 'google6e065bf0b183ed5f.html'));
+})
 // Test route for authentication middleware
 app.get('/secure', secureRoutes, (req, res) => { res.json({ data: 'logged in' }) })
 
