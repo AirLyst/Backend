@@ -36,7 +36,7 @@ router.post('/', upload.array('photos'), async (req, res) => {
     let listing = await Listing.create(newListing)
 
     listing.photos = await Promise.all(req.files.map(async (image, key) => {
-      const buffer = await sharp(image.buffer).resize(200, 200).toBuffer()
+      const buffer = await sharp(image.buffer).resize(600).toBuffer()
       await s3.putObject({
         Body: buffer,
         Bucket: `gearhubbucket1/${user.id}/listings/${listing.id}`,
