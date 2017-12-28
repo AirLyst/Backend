@@ -94,8 +94,10 @@ routes.get('/:_id/:conversationId', async (req, res) => {
     if(userInfo) {
       const messages = await Message.find({ conversationId })
       .select('author body')
-      
+      .sort({ _id: -1 })
+      .limit(20)
       if (messages) { 
+        messages.reverse()//reverse so that we can get it in order        
         res.status(200).json({ user: userInfo, listing: conversation.listingId, messages })
       } else {
         res.status(400).send({ err: 'Failed to fetch user information' })
@@ -104,7 +106,18 @@ routes.get('/:_id/:conversationId', async (req, res) => {
   } else {
     res.status(400).send({ err: 'Failed to get conversation'})
   }
+})
 
+routes.get('/paginate/:conversationId/:pivot', async (req, res) => {
+  const { conversationId, pivot } = req.params
+  if(pivot === null || pivot === 'null') 
+    res.status(400).send({ err: 'Pivot is null'})
+  const messages = await Message.find({ _id: {'$lt': pivot }, conversationId })
+  .select('author body')
+  .sort({ _id: -1 })
+  .limit(20)
+  console.log(messages)
+  res.status(200).json(messages.reverse())
 })
 
 /**

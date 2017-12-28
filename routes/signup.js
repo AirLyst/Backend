@@ -24,6 +24,7 @@ const asyncMiddleware = fn => (req, res, next) => {
 
 router.post('/', async (req, res) => {
   if (!validateInput(req.body).isValid) return res.send('Empty fields')
+
   const { firstName, lastName, email, username, password } = req.body
   try {
     let user = await User.findOne({ username })
